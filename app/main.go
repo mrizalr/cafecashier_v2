@@ -5,8 +5,9 @@ import (
 	"github.com/mrizalr/cafecashierpt2/utils"
 )
 
-func Init() {
+func init() {
 	utils.InitConfig()
+	database.SetDBEnvironment()
 }
 
 func main() {
