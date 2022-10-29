@@ -2,13 +2,15 @@ package utils
 
 import (
 	"log"
+	"os"
 
 	"github.com/spf13/viper"
 )
 
 func InitConfig() {
 	viper.SetConfigType("json")
-	viper.AddConfigPath("./")
+	wd, _ := os.Getwd()
+	viper.AddConfigPath(wd)
 	viper.SetConfigName("config")
 
 	err := viper.ReadInConfig()
