@@ -16,8 +16,8 @@ func NewMysqlArticleRepository(db *sql.DB) *mysqlAdminRepository {
 }
 
 func (r *mysqlAdminRepository) Add(ctx context.Context, admin *domain.Admin) (insertedID int64, err error) {
-	query := `INSERT INTO ADMIN(username, password) VALUES (?,?)`
-	sqlRes, err := r.db.ExecContext(ctx, query, admin.Username, admin.Password)
+	query := `INSERT INTO ADMIN(username, password, role) VALUES (?,?,?)`
+	sqlRes, err := r.db.ExecContext(ctx, query, admin.Username, admin.Password, admin.Role)
 	if err != nil {
 		return
 	}
@@ -27,7 +27,7 @@ func (r *mysqlAdminRepository) Add(ctx context.Context, admin *domain.Admin) (in
 }
 
 func (r *mysqlAdminRepository) FindByID(ctx context.Context, ID int) (res domain.Admin, err error) {
-	query := `SELECT id, username FROM admin WHERE id = ?`
-	err = r.db.QueryRowContext(ctx, query, ID).Scan(&res.ID, &res.Username)
+	query := `SELECT id, username, role FROM admin WHERE id = ?`
+	err = r.db.QueryRowContext(ctx, query, ID).Scan(&res.ID, &res.Username, &res.Role)
 	return
 }

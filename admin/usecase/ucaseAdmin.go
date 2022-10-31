@@ -15,10 +15,11 @@ func NewUcaseAdmin(adminRepo domain.AdminRepository) *ucaseAdmin {
 	return &ucaseAdmin{adminRepo}
 }
 
-func (u *ucaseAdmin) Add(ctx context.Context, req models.CreateNewAdminRequest) (res domain.Admin, err error) {
+func (u *ucaseAdmin) Add(ctx context.Context, req *models.CreateNewAdminRequest) (res domain.Admin, err error) {
 	newAdmin := domain.Admin{
 		Username: req.Username,
 		Password: req.Password,
+		Role:     req.Role,
 	}
 
 	insertedID, err := u.adminRepo.Add(ctx, &newAdmin)
