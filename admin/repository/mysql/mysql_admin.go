@@ -17,7 +17,12 @@ func NewMysqlArticleRepository(db *sql.DB) *mysqlAdminRepository {
 
 func (r *mysqlAdminRepository) Add(ctx context.Context, admin *domain.Admin) (insertedID int64, err error) {
 	query := `INSERT INTO ADMIN(username, password, role) VALUES (?,?,?)`
-	sqlRes, err := r.db.ExecContext(ctx, query, admin.Username, admin.Password, admin.Role)
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return
+	}
+
+	sqlRes, err := stmt.ExecContext(ctx, admin.Username, admin.Password, admin.Role)
 	if err != nil {
 		return
 	}
