@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 
 	"github.com/mrizalr/cafecashierpt2/models"
@@ -16,6 +18,9 @@ func BasicAuth(next http.HandlerFunc) http.Handler {
 
 		jsonData, err := utils.Decode(token)
 		if err != nil {
+			log.Println(err.Error())
+			err = errors.New("you are not authorized, please do some login first")
+
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write(utils.ResponseFormatter(http.StatusUnauthorized, "UNAUTHORIZED", "errors", err.Error()))
 			return
@@ -24,6 +29,9 @@ func BasicAuth(next http.HandlerFunc) http.Handler {
 		adminData := models.AdminDataToken{}
 		err = json.Unmarshal(jsonData, &adminData)
 		if err != nil {
+			log.Println(err.Error())
+			err = errors.New("you are not authorized, please do some login first")
+
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write(utils.ResponseFormatter(http.StatusUnauthorized, "UNAUTHORIZED", "errors", err.Error()))
 			return

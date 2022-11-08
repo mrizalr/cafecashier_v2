@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/mrizalr/cafecashierpt2/admin/delivery/http/middleware"
@@ -23,12 +24,14 @@ func NewAdminHandler(m *http.ServeMux, ucaseAdmin domain.AdminUseCase) {
 
 func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 	utils.SetContentTypeJSON(w)
-	adminData := r.Context().Value("admin-data").(models.AdminDataToken)
+	adminData, ok := r.Context().Value("admin-data").(models.AdminDataToken)
 
-	if adminData.Role != "super admin" {
+	if adminData.Role != "super admin" || !ok {
+		log.Printf("admins with roles other than \"super admin\" cannot access this endpoint, current admin role %v\n", adminData.Role)
+		err := errors.New("can't access this endpoint")
+
 		w.WriteHeader(http.StatusForbidden)
-		res := utils.ResponseFormatter(http.StatusForbidden, "FORBIDDEN", "errors", errors.New("RESTRICTED AREA ! \nyou can't access this page"))
-		w.Write(res)
+		w.Write(utils.ResponseFormatter(http.StatusForbidden, "FORBIDDEN", "errors", err.Error()))
 
 		return
 	}
@@ -37,8 +40,7 @@ func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		res := utils.ResponseFormatter(http.StatusBadRequest, "BAD_REQUEST", "errors", err.Error())
-		w.Write(res)
+		w.Write(utils.ResponseFormatter(http.StatusBadRequest, "BAD_REQUEST", "errors", err.Error()))
 
 		return
 	}
@@ -46,13 +48,11 @@ func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 	result, err := h.ucaseAdmin.Add(r.Context(), &request)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
-		res := utils.ResponseFormatter(http.StatusBadGateway, "BAD_GATEWAY", "errors", err.Error())
-		w.Write(res)
+		w.Write(utils.ResponseFormatter(http.StatusBadGateway, "BAD_GATEWAY", "errors", err.Error()))
 
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	res := utils.ResponseFormatter(http.StatusCreated, "CREATED", "data", utils.FormatToCreateNewAdminResponse(result))
-	w.Write(res)
+	w.Write(utils.ResponseFormatter(http.StatusCreated, "CREATED", "data", utils.FormatToCreateNewAdminResponse(result)))
 }
