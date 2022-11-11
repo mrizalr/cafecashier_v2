@@ -1,0 +1,14 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "this is a portofolio project of mrizalr",
+        "title": "Swagger Cafe Cashier API",
+        "contact": {
+            "name": "API SUPPORT",
+            "url": "github.com/mrizalr"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "paths": {}
+}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/mrizalr/cafecashierpt2/domain"
 	"github.com/mrizalr/cafecashierpt2/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ucaseAdmin struct {
@@ -15,18 +16,26 @@ func NewUcaseAdmin(adminRepo domain.AdminRepository) *ucaseAdmin {
 	return &ucaseAdmin{adminRepo}
 }
 
-func (u *ucaseAdmin) Add(ctx context.Context, req *models.CreateNewAdminRequest) (res domain.Admin, err error) {
-	newAdmin := domain.Admin{
-		Username: req.Username,
-		Password: req.Password,
-		Role:     req.Role,
-	}
+func (u *ucaseAdmin) Add(ctx context.Context, req *models.CreateNewAdminRequest) (domain.Admin, error) {
+	result := domain.Admin{}
 
-	insertedID, err := u.adminRepo.Add(ctx, &newAdmin)
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return
+		return result, err
 	}
 
-	res, err = u.adminRepo.FindByID(ctx, int(insertedID))
-	return
+	insertedID, err := u.adminRepo.Add(ctx, &domain.Admin{
+		Username: req.Username,
+		Password: string(hash),
+		Role:     req.Role,
+	})
+
+	if err != nil {
+		return result, err
+	}
+
+	result.ID = int(insertedID)
+	result.Username = req.Username
+	result.Role = req.Role
+	return result, nil
 }

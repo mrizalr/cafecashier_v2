@@ -10,7 +10,20 @@ import (
 	"github.com/mrizalr/cafecashierpt2/database"
 	"github.com/mrizalr/cafecashierpt2/utils"
 	"github.com/spf13/viper"
+
+	_ "github.com/mrizalr/cafecashierpt2/docs"
+	httpSwagger "github.com/swaggo/http-swagger" // http-swagger middleware
 )
+
+// @title Swagger Cafe Cashier API
+// @version 1.0
+// @description this is a portofolio project of mrizalr
+
+// @contact.name API SUPPORT
+// @contact.url github.com/mrizalr
+// @contact email muhammadrizal2252@gmail.com
+
+// @host localhost:8080
 
 func init() {
 	utils.InitConfig()
@@ -25,5 +38,6 @@ func main() {
 	adminUcase := _adminUsecase.NewUcaseAdmin(adminRepository)
 	_adminHandler.NewAdminHandler(mux, adminUcase)
 
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 	http.ListenAndServe(fmt.Sprintf(":%s", viper.GetString("server_port")), mux)
 }

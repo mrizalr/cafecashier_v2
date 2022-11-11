@@ -9,60 +9,56 @@ import (
 	"github.com/mrizalr/cafecashierpt2/domain/mocks"
 	"github.com/mrizalr/cafecashierpt2/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestAdd(t *testing.T) {
+	fields := struct {
+		username string
+		password string
+		role     string
+	}{
+		username: "test",
+		password: "test123",
+		role:     "super admin",
+	}
+
 	t.Run("Test success add new admin", func(t *testing.T) {
-		mock := new(mocks.MysqlAdminRepository)
-		ucaseAdmin := ucaseAdmin{mock}
+		mockRepo := new(mocks.MysqlAdminRepository)
+		ucaseAdmin := ucaseAdmin{mockRepo}
 
-		mock.On("Add", context.Background(), &domain.Admin{
-			Username: "test",
-			Password: "test",
-			Role:     "test",
-		}).Return(1, nil)
-
-		mock.On("FindByID", context.Background(), 1).Return(domain.Admin{
-			ID:       1,
-			Username: "test",
-			Role:     "test",
-		}, nil)
+		mockRepo.On("Add", context.Background(), mock.AnythingOfType("*domain.Admin")).Return(1, nil)
 
 		result, err := ucaseAdmin.Add(context.Background(), &models.CreateNewAdminRequest{
-			Username: "test",
-			Password: "test",
-			Role:     "test",
+			Username: fields.username,
+			Password: fields.password,
+			Role:     fields.role,
 		})
 
-		mock.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 		assert.Nil(t, err)
 		assert.Equal(t, domain.Admin{
 			ID:       1,
-			Username: "test",
+			Username: fields.username,
 			Password: "",
-			Role:     "test",
+			Role:     fields.role,
 		}, result)
 	})
 
 	t.Run("Test failed add new admin", func(t *testing.T) {
-		mock := new(mocks.MysqlAdminRepository)
-		ucaseAdmin := ucaseAdmin{mock}
+		mockRepo := new(mocks.MysqlAdminRepository)
+		ucaseAdmin := ucaseAdmin{mockRepo}
 
-		mock.On("Add", context.Background(), &domain.Admin{
-			Username: "test",
-			Password: "test",
-			Role:     "test",
-		}).Return(0, errors.New("Error inserting data"))
+		mockRepo.On("Add", context.Background(), mock.AnythingOfType("*domain.Admin")).Return(0, errors.New("Error inserting data"))
 
 		result, err := ucaseAdmin.Add(context.Background(), &models.CreateNewAdminRequest{
-			Username: "test",
-			Password: "test",
-			Role:     "test",
+			Username: fields.username,
+			Password: fields.password,
+			Role:     fields.role,
 		})
 
-		mock.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
 		assert.NotNil(t, err)
 		assert.Equal(t, domain.Admin{}, result)
-		t.Log(err)
 	})
 }

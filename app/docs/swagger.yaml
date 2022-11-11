@@ -1,0 +1,10 @@
+host: localhost:8080
+info:
+  contact:
+    name: API SUPPORT
+    url: github.com/mrizalr
+  description: this is a portofolio project of mrizalr
+  title: Swagger Cafe Cashier API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
