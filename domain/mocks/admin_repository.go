@@ -20,3 +20,8 @@ func (r MysqlAdminRepository) FindByID(ctx context.Context, id int) (domain.Admi
 	arguments := r.Called(ctx, id)
 	return arguments.Get(0).(domain.Admin), arguments.Error(1)
 }
+
+func (r MysqlAdminRepository) FindByUsername(ctx context.Context, username string) (domain.Admin, error) {
+	arguments := r.Called(ctx, username)
+	return arguments.Get(0).(domain.Admin), arguments.Error(1)
+}

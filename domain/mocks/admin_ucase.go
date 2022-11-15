@@ -12,7 +12,12 @@ type AdminUcase struct {
 	mock.Mock
 }
 
-func (u *AdminUcase) Add(ctx context.Context, req *models.CreateNewAdminRequest) (res domain.Admin, err error) {
+func (u *AdminUcase) Add(ctx context.Context, req *models.CreateNewAdminRequest) (domain.Admin, error) {
 	arguments := u.Called(ctx, req)
 	return arguments.Get(0).(domain.Admin), arguments.Error(1)
+}
+
+func (u *AdminUcase) Login(ctx context.Context, req *models.AdminLoginRequest) (string, error) {
+	arguments := u.Called(ctx, req)
+	return arguments.String(0), arguments.Error(1)
 }

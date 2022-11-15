@@ -16,8 +16,10 @@ type Admin struct {
 type AdminRepository interface {
 	Add(ctx context.Context, admin *Admin) (int64, error)
 	FindByID(ctx context.Context, ID int) (Admin, error)
+	FindByUsername(ctx context.Context, username string) (Admin, error)
 }
 
 type AdminUseCase interface {
 	Add(ctx context.Context, req *models.CreateNewAdminRequest) (Admin, error)
+	Login(ctx context.Context, req *models.AdminLoginRequest) (string, error)
 }

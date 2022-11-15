@@ -17,3 +17,8 @@ type AdminDataToken struct {
 	Username string `json:"username"`
 	Role     int    `json:"role_id"`
 }
+
+type AdminLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
