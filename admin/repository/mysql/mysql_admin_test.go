@@ -26,7 +26,7 @@ func TestAdd(t *testing.T) {
 	admin := &domain.Admin{
 		Username: "Cashier",
 		Password: "Cashier123",
-		Role:     "Cashier",
+		Role:     3,
 	}
 
 	db, mock := NewMock()
@@ -58,7 +58,7 @@ func TestFindByID(t *testing.T) {
 
 	t.Run("Test Found Data", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "username", "role"}).
-			AddRow(1, "admin", "super admin")
+			AddRow(1, "admin", 1)
 
 		query := `SELECT id, username, role FROM admin WHERE id = ?`
 		mock.ExpectQuery(query).WithArgs(1).WillReturnRows(rows)

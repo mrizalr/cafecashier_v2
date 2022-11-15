@@ -26,7 +26,7 @@ func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 	utils.SetContentTypeJSON(w)
 	adminData, ok := r.Context().Value("admin-data").(models.AdminDataToken)
 
-	if adminData.Role != "super admin" || !ok {
+	if adminData.Role != 1 || !ok {
 		log.Printf("admins with roles other than \"super admin\" cannot access this endpoint, current admin role %v\n", adminData.Role)
 		err := errors.New("can't access this endpoint")
 

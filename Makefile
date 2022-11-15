@@ -1,5 +1,4 @@
-run :
-	cd app
-	swag init
-	cd ..
+run:
 	go run app/main.go
+
+.PHONY: run

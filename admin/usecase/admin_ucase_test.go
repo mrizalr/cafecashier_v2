@@ -16,11 +16,11 @@ func TestAdd(t *testing.T) {
 	fields := struct {
 		username string
 		password string
-		role     string
+		role     int
 	}{
 		username: "test",
 		password: "test123",
-		role:     "super admin",
+		role:     1,
 	}
 
 	t.Run("Test success add new admin", func(t *testing.T) {

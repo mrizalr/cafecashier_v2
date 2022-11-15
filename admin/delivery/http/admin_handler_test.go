@@ -20,7 +20,7 @@ func TestAddNewAdmin(t *testing.T) {
 			{
 				"username" : "admin2",
 				"password" : "admin123",
-				"role" : "super super admin"
+				"role_id" : 1
 			}	
 		`)
 
@@ -28,7 +28,7 @@ func TestAddNewAdmin(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "admin-data", models.AdminDataToken{
 			Id:       1,
 			Username: "owner",
-			Role:     "super admin",
+			Role:     1,
 		})
 
 		w := httptest.NewRecorder()
@@ -37,11 +37,11 @@ func TestAddNewAdmin(t *testing.T) {
 		mockUcase.On("Add", ctx, &models.CreateNewAdminRequest{
 			Username: "admin2",
 			Password: "admin123",
-			Role:     "super super admin",
+			Role:     1,
 		}).Return(domain.Admin{
 			ID:       2,
 			Username: "admin2",
-			Role:     "super super admin",
+			Role:     1,
 		}, nil)
 
 		adminUcase := AdminHandler{mockUcase}
@@ -54,7 +54,7 @@ func TestAddNewAdmin(t *testing.T) {
 		data, err := io.ReadAll(res.Body)
 		assert.NoError(t, err)
 
-		expect := `{"code":201,"data":{"id":2,"username":"admin2","role":"super super admin"},"status":"CREATED"}`
+		expect := `{"code":201,"data":{"id":2,"username":"admin2","role_id":1},"status":"CREATED"}`
 
 		mockUcase.AssertExpectations(t)
 		assert.Equal(t, 201, res.StatusCode)
@@ -66,7 +66,7 @@ func TestAddNewAdmin(t *testing.T) {
 			{
 				"username" : "admin2",
 				"password" : "admin123",
-				"role" : "super super admin"
+				"role_id" : 1
 			}	
 		`)
 
