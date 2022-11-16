@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,7 @@ import (
 	"github.com/mrizalr/cafecashierpt2/domain/mocks"
 	"github.com/mrizalr/cafecashierpt2/models"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestAddNewAdmin(t *testing.T) {
@@ -90,4 +92,40 @@ func TestAddNewAdmin(t *testing.T) {
 		assert.Equal(t, 403, res.StatusCode)
 		assert.Equal(t, expect, string(data))
 	})
+}
+
+func TestAdminHandler_Login(t *testing.T) {
+	body := strings.NewReader(`
+		{
+			"username" : "admin",
+			"password" : "admin123"
+		}
+	`)
+	token, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+
+	req := httptest.NewRequest(http.MethodPost, "/admin/login", body)
+	w := httptest.NewRecorder()
+
+	mockUcase := new(mocks.AdminUcase)
+	mockUcase.On("Login", context.Background(), &models.AdminLoginRequest{
+		Username: "admin",
+		Password: "admin123",
+	}).Return(string(token), nil)
+
+	adminUsecase := AdminHandler{mockUcase}
+
+	adminUsecase.Login(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+
+	expect := fmt.Sprintf(`{"code":200,"data":{"token":"%v"},"status":"SUCCESS"}`, string(token))
+
+	mockUcase.AssertExpectations(t)
+	assert.Equal(t, 200, res.StatusCode)
+	assert.Equal(t, expect, string(data))
+
 }

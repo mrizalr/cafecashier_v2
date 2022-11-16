@@ -1,4 +1,7 @@
 run:
 	go run app/main.go
 
-.PHONY: run
+test:
+	go test ./... -v -cover
+
+.PHONY: run test

@@ -25,6 +25,10 @@ func NewAdminHandler(m *http.ServeMux, ucaseAdmin domain.AdminUseCase) {
 }
 
 func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+
 	utils.SetContentTypeJSON(w)
 	adminData, ok := r.Context().Value("admin-data").(models.AdminDataToken)
 
@@ -60,6 +64,10 @@ func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		return
+	}
+
 	utils.SetContentTypeJSON(w)
 
 	request := new(models.AdminLoginRequest)
