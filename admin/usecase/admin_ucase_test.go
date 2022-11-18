@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 
 	"github.com/mrizalr/cafecashierpt2/domain"
@@ -15,58 +14,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func TestAdd(t *testing.T) {
-	fields := struct {
-		username string
-		password string
-		role     int
-	}{
-		username: "test",
-		password: "test123",
-		role:     1,
-	}
+func Test_UcaseAdmin_Add(t *testing.T) {
+	mockRepo := new(mocks.MysqlAdminRepository)
+	ucaseAdmin := ucaseAdmin{mockRepo}
 
-	t.Run("Test success add new admin", func(t *testing.T) {
-		mockRepo := new(mocks.MysqlAdminRepository)
-		ucaseAdmin := ucaseAdmin{mockRepo}
+	mockRepo.On("Add", context.Background(), mock.AnythingOfType("*domain.Admin")).Return(1, nil)
+	mockRepo.On("FindAdminRoleByID", context.Background(), 1).Return("super admin", nil)
 
-		mockRepo.On("Add", context.Background(), mock.AnythingOfType("*domain.Admin")).Return(1, nil)
-
-		result, err := ucaseAdmin.Add(context.Background(), &models.CreateNewAdminRequest{
-			Username: fields.username,
-			Password: fields.password,
-			Role:     fields.role,
-		})
-
-		mockRepo.AssertExpectations(t)
-		assert.Nil(t, err)
-		assert.Equal(t, domain.Admin{
-			ID:       1,
-			Username: fields.username,
-			Password: "",
-			Role:     fields.role,
-		}, result)
+	result, err := ucaseAdmin.Add(context.Background(), &models.CreateNewAdminRequest{
+		Username: "admin",
+		Password: "admin123",
+		Role:     1,
 	})
 
-	t.Run("Test failed add new admin", func(t *testing.T) {
-		mockRepo := new(mocks.MysqlAdminRepository)
-		ucaseAdmin := ucaseAdmin{mockRepo}
-
-		mockRepo.On("Add", context.Background(), mock.AnythingOfType("*domain.Admin")).Return(0, errors.New("Error inserting data"))
-
-		result, err := ucaseAdmin.Add(context.Background(), &models.CreateNewAdminRequest{
-			Username: fields.username,
-			Password: fields.password,
-			Role:     fields.role,
-		})
-
-		mockRepo.AssertExpectations(t)
-		assert.NotNil(t, err)
-		assert.Equal(t, domain.Admin{}, result)
-	})
+	mockRepo.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, models.Admin{
+		ID:       1,
+		Username: "admin",
+		Role:     "super admin",
+	}, result)
 }
 
-func Test_ucaseAdmin_Login(t *testing.T) {
+func Test_UcaseAdmin_Login(t *testing.T) {
 	mockRepo := new(mocks.MysqlAdminRepository)
 	usecaseAdmin := ucaseAdmin{
 		adminRepo: mockRepo,
@@ -82,11 +52,11 @@ func Test_ucaseAdmin_Login(t *testing.T) {
 	h, err := bcrypt.GenerateFromPassword([]byte(admin.Password), bcrypt.DefaultCost)
 	assert.NoError(t, err)
 
-	mockRepo.On("FindByUsername", context.Background(), mock.AnythingOfType("string")).Return(domain.Admin{
+	mockRepo.On("FindByUsername", context.Background(), mock.AnythingOfType("string")).Return(models.Admin{
 		ID:       1,
 		Username: "admin",
 		Password: string(h),
-		Role:     1,
+		Role:     "super admin",
 	}, nil)
 
 	token, err := usecaseAdmin.Login(context.Background(), &models.AdminLoginRequest{
@@ -101,7 +71,7 @@ func Test_ucaseAdmin_Login(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	assert.NotEqual(t, "", token)
 
-	res := domain.Admin{}
+	res := models.Admin{}
 	j, err := utils.Decode(token)
 	assert.NoError(t, err)
 	err = json.Unmarshal(j, &res)
@@ -109,5 +79,29 @@ func Test_ucaseAdmin_Login(t *testing.T) {
 
 	assert.Equal(t, admin.ID, res.ID)
 	assert.Equal(t, admin.Username, res.Username)
-	assert.Equal(t, admin.Role, res.Role)
+	assert.Equal(t, "super admin", res.Role)
+}
+
+func Test_UcaseAdmin_GetAdmins(t *testing.T) {
+	mockRepo := new(mocks.MysqlAdminRepository)
+	adminUcase := ucaseAdmin{
+		adminRepo: mockRepo,
+	}
+
+	mockRepo.On("FindAll", context.Background()).Return([]models.Admin{{
+		ID:       1,
+		Username: "admin",
+		Password: "",
+		Role:     "super admin",
+	}, {
+		ID:       2,
+		Username: "finance",
+		Password: "",
+		Role:     "finance",
+	}}, nil)
+
+	admins, err := adminUcase.GetAdmins(context.Background())
+	mockRepo.AssertExpectations(t)
+	assert.NoError(t, err)
+	assert.Len(t, admins, 2)
 }

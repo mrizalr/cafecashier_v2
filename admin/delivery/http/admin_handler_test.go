@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mrizalr/cafecashierpt2/domain"
 	"github.com/mrizalr/cafecashierpt2/domain/mocks"
 	"github.com/mrizalr/cafecashierpt2/models"
 	"github.com/stretchr/testify/assert"
@@ -28,9 +27,9 @@ func TestAddNewAdmin(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/admin", body)
 		ctx := context.WithValue(context.Background(), "admin-data", models.AdminDataToken{
-			Id:       1,
+			ID:       1,
 			Username: "owner",
-			Role:     1,
+			Role:     "super admin",
 		})
 
 		w := httptest.NewRecorder()
@@ -40,15 +39,15 @@ func TestAddNewAdmin(t *testing.T) {
 			Username: "admin2",
 			Password: "admin123",
 			Role:     1,
-		}).Return(domain.Admin{
+		}).Return(models.Admin{
 			ID:       2,
 			Username: "admin2",
-			Role:     1,
+			Role:     "super admin",
 		}, nil)
 
-		adminUcase := AdminHandler{mockUcase}
+		handler := AdminHandler{mockUcase}
 
-		adminUcase.AddNewAdmin(w, req.WithContext(ctx))
+		handler.AddNewAdmin(w, req.WithContext(ctx))
 
 		res := w.Result()
 		defer res.Body.Close()
@@ -56,7 +55,7 @@ func TestAddNewAdmin(t *testing.T) {
 		data, err := io.ReadAll(res.Body)
 		assert.NoError(t, err)
 
-		expect := `{"code":201,"data":{"id":2,"username":"admin2","role_id":1},"status":"CREATED"}`
+		expect := `{"code":201,"data":{"id":2,"username":"admin2","role":"super admin"},"status":"CREATED"}`
 
 		mockUcase.AssertExpectations(t)
 		assert.Equal(t, 201, res.StatusCode)
@@ -68,7 +67,7 @@ func TestAddNewAdmin(t *testing.T) {
 			{
 				"username" : "admin2",
 				"password" : "admin123",
-				"role_id" : 1
+				"role" : "admin"
 			}	
 		`)
 
@@ -76,9 +75,9 @@ func TestAddNewAdmin(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		mockUcase := new(mocks.AdminUcase)
-		adminUcase := AdminHandler{mockUcase}
+		handler := AdminHandler{mockUcase}
 
-		adminUcase.AddNewAdmin(w, req)
+		handler.AddNewAdmin(w, req)
 
 		res := w.Result()
 		defer res.Body.Close()
@@ -112,9 +111,9 @@ func TestAdminHandler_Login(t *testing.T) {
 		Password: "admin123",
 	}).Return(string(token), nil)
 
-	adminUsecase := AdminHandler{mockUcase}
+	handler := AdminHandler{mockUcase}
 
-	adminUsecase.Login(w, req)
+	handler.Login(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -128,4 +127,34 @@ func TestAdminHandler_Login(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 	assert.Equal(t, expect, string(data))
 
+}
+
+func TestGetAdmins(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/admin", nil)
+	w := httptest.NewRecorder()
+
+	mockUcase := new(mocks.AdminUcase)
+	mockUcase.On("GetAdmins", context.Background()).Return([]models.Admin{{
+		ID:       1,
+		Username: "owner",
+		Role:     "super admin",
+	}, {
+		ID:       2,
+		Username: "finance",
+		Role:     "finance",
+	}}, nil)
+
+	handler := AdminHandler{mockUcase}
+	handler.GetAdmins(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+
+	expect := `{"code":200,"data":[{"id":1,"username":"owner","role":"super admin"},{"id":2,"username":"finance","role":"finance"}],"status":"SUCCESS"}`
+	mockUcase.AssertExpectations(t)
+	assert.Equal(t, 200, res.StatusCode)
+	assert.Equal(t, expect, string(data))
 }

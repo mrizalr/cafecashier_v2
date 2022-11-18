@@ -1,5 +1,12 @@
 package models
 
+type Admin struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
 type CreateNewAdminRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -7,15 +14,15 @@ type CreateNewAdminRequest struct {
 }
 
 type CreateNewAdminResponse struct {
-	Id       int    `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Role     int    `json:"role_id"`
+	Role     string `json:"role"`
 }
 
 type AdminDataToken struct {
-	Id       int    `json:"id"`
+	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Role     int    `json:"role_id"`
+	Role     string `json:"role"`
 }
 
 type AdminLoginRequest struct {

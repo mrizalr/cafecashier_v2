@@ -10,6 +10,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/mrizalr/cafecashierpt2/domain"
+	"github.com/mrizalr/cafecashierpt2/models"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,44 +58,32 @@ func TestFindByID(t *testing.T) {
 	db, mock := NewMock()
 	repo := &mysqlAdminRepository{db}
 
-	t.Run("Test Found Data", func(t *testing.T) {
-		rows := sqlmock.NewRows([]string{"id", "username", "role_id"}).
-			AddRow(1, "admin", 1)
+	rows := sqlmock.NewRows([]string{"id", "username", "role"}).
+		AddRow(1, "admin", "super admin")
 
-		query := `SELECT id, username, role_id FROM admins WHERE id = ?`
-		mock.ExpectQuery(query).WithArgs(1).WillReturnRows(rows)
+	query := `SELECT a.id, a.username, a.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id WHERE id = ?`
+	mock.ExpectQuery(query).WithArgs(1).WillReturnRows(rows)
 
-		admin, err := repo.FindByID(context.Background(), 1)
-		assert.NoError(t, err)
-		assert.NotNil(t, admin)
-	})
-
-	t.Run("Test Not Found Data", func(t *testing.T) {
-		query := `SELECT id, username, role_id FROM admins WHERE id = ?`
-		rows := sqlmock.NewRows([]string{"id", "username", "role_id"})
-		mock.ExpectQuery(query).WithArgs(1).WillReturnRows(rows)
-
-		admin, err := repo.FindByID(context.Background(), 1)
-		assert.Error(t, err)
-		assert.Equal(t, domain.Admin{}, admin)
-	})
+	admin, err := repo.FindByID(context.Background(), 1)
+	assert.NoError(t, err)
+	assert.NotNil(t, admin)
 }
 
 func TestFindByUsername(t *testing.T) {
 	db, mock := NewMock()
-	user := domain.Admin{
+	user := models.Admin{
 		ID:       1,
-		Username: "admin",
-		Password: "admin123",
-		Role:     1,
+		Username: "Admin",
+		Password: "Admin123",
+		Role:     "Admin",
 	}
 
 	repo := &mysqlAdminRepository{db}
-	query := `SELECT id, username, password, role_id FROM admins WHERE username = ?`
+	query := `SELECT a.id, a.username, a.password, ar.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id WHERE username = ?`
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	assert.NoError(t, err)
 
-	rows := mock.NewRows([]string{"id", "username", "password", "role_id"}).
+	rows := mock.NewRows([]string{"id", "username", "password", "role"}).
 		AddRow(user.ID, user.Username, string(hash), user.Role)
 
 	mock.ExpectQuery(query).WithArgs("admin").WillReturnRows(rows)
@@ -109,4 +98,22 @@ func TestFindByUsername(t *testing.T) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(user.Password))
 	assert.NoError(t, err)
+}
+
+func TestFindAll(t *testing.T) {
+	db, mock := NewMock()
+	repo := mysqlAdminRepository{db}
+
+	query := `SELECT a.id, a.username, ar.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id`
+
+	rows := mock.NewRows([]string{"id", "username", "role"}).
+		AddRow(1, "owner", "super admin").
+		AddRow(2, "finance", "finance")
+
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	admins, err := repo.FindAll(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, admins)
+	assert.Len(t, admins, 2)
 }

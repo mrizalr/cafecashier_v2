@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 
-	"github.com/mrizalr/cafecashierpt2/domain"
 	"github.com/mrizalr/cafecashierpt2/models"
 )
 
@@ -18,9 +17,9 @@ func ResponseFormatter(httpstatuscode int, httpstatus string, responseType strin
 	return jsonResponse
 }
 
-func FormatToCreateNewAdminResponse(a domain.Admin) *models.CreateNewAdminResponse {
+func FormatToCreateNewAdminResponse(a models.Admin) *models.CreateNewAdminResponse {
 	return &models.CreateNewAdminResponse{
-		Id:       a.ID,
+		ID:       a.ID,
 		Username: a.Username,
 		Role:     a.Role,
 	}

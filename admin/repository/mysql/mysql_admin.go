@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/mrizalr/cafecashierpt2/domain"
+	"github.com/mrizalr/cafecashierpt2/models"
 )
 
 type mysqlAdminRepository struct {
@@ -30,16 +31,46 @@ func (r *mysqlAdminRepository) Add(ctx context.Context, admin *domain.Admin) (in
 	return sqlRes.LastInsertId()
 }
 
-func (r *mysqlAdminRepository) FindByID(ctx context.Context, ID int) (domain.Admin, error) {
-	result := new(domain.Admin)
-	query := `SELECT id, username, role_id FROM admins WHERE id = ?`
+func (r *mysqlAdminRepository) FindByID(ctx context.Context, ID int) (models.Admin, error) {
+	result := new(models.Admin)
+	query := `SELECT a.id, a.username, a.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id WHERE id = ?`
 	err := r.db.QueryRowContext(ctx, query, ID).Scan(&result.ID, &result.Username, &result.Role)
 	return *result, err
 }
 
-func (r *mysqlAdminRepository) FindByUsername(ctx context.Context, username string) (domain.Admin, error) {
-	result := new(domain.Admin)
-	query := `SELECT id, username, password, role_id FROM admins WHERE username = ?`
+func (r *mysqlAdminRepository) FindByUsername(ctx context.Context, username string) (models.Admin, error) {
+	result := new(models.Admin)
+	query := `SELECT a.id, a.username, a.password, ar.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id WHERE username = ?`
 	err := r.db.QueryRowContext(ctx, query, username).Scan(&result.ID, &result.Username, &result.Password, &result.Role)
 	return *result, err
+}
+
+func (r *mysqlAdminRepository) FindAll(ctx context.Context) ([]models.Admin, error) {
+	result := []models.Admin{}
+	query := `SELECT a.id, a.username, ar.role FROM admins a JOIN admin_roles ar ON a.role_id = ar.id`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		admin := models.Admin{}
+		err := rows.Scan(&admin.ID, &admin.Username, &admin.Role)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, admin)
+	}
+
+	return result, nil
+}
+
+func (r *mysqlAdminRepository) FindAdminRoleByID(ctx context.Context, ID int) (string, error) {
+	role := ""
+	query := `SELECT role FROM admin_roles WHERE id = ?`
+	err := r.db.QueryRowContext(ctx, query, ID).Scan(&role)
+
+	return role, err
 }

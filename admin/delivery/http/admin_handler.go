@@ -26,13 +26,14 @@ func NewAdminHandler(m *http.ServeMux, ucaseAdmin domain.AdminUseCase) {
 
 func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
 	utils.SetContentTypeJSON(w)
 	adminData, ok := r.Context().Value("admin-data").(models.AdminDataToken)
 
-	if adminData.Role != 1 || !ok {
+	if adminData.Role != "super admin" || !ok {
 		log.Printf("admins with roles other than \"super admin\" cannot access this endpoint, current admin role %v\n", adminData.Role)
 		err := errors.New("can't access this endpoint")
 
@@ -65,6 +66,7 @@ func (h *AdminHandler) AddNewAdmin(w http.ResponseWriter, r *http.Request) {
 
 func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -89,4 +91,24 @@ func (h *AdminHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(utils.ResponseFormatter(http.StatusOK, "SUCCESS", "data", map[string]string{"token": result}))
+}
+
+func (h *AdminHandler) GetAdmins(w http.ResponseWriter, r *http.Request) {
+	utils.SetContentTypeJSON(w)
+
+	admins, err := h.ucaseAdmin.GetAdmins(context.Background())
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(utils.ResponseFormatter(http.StatusOK, "DATA NOT FOUND", "error", err.Error()))
+
+		return
+	}
+
+	response := []models.CreateNewAdminResponse{}
+	for _, admin := range admins {
+		adminResponse := utils.FormatToCreateNewAdminResponse(admin)
+		response = append(response, *adminResponse)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(utils.ResponseFormatter(http.StatusOK, "SUCCESS", "data", response))
 }
